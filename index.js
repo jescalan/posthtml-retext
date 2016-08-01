@@ -1,21 +1,36 @@
-var toTree = require('posthtml/lib/parser').toTree;
-var retext = require('retext')();
+let retext = require('retext')()
+const W = require('when')
 
-module.exports = function(plugins) {
+module.exports = (plugins) => {
+  plugins.map((plugin) => {
+    Array.isArray(plugin)
+      ? retext.use.apply(retext, plugin)
+      : retext.use(plugin)
+  })
 
-    plugins.forEach(function(plugin) {
-        Array.isArray(plugin)?
-            retext.use.apply(retext, plugin):
-            retext.use(plugin);
-    });
+  const contentNodes = []
+  const tasks = []
 
-    return function posthtmlRetext(tree) {
-        tree.walk(function(node) {
-            if(typeof node === 'string' && !/^\n\s*$/.test(node)) {
-                return toTree(retext.process(node))[0];
-            }
-            return node;
-        });
-        return tree;
-    };
-};
+  return function posthtmlRetext (tree) {
+    // go through the tree and get all text nodes
+    tree.map((node) => {
+      // bottom up recurse
+      if (node.type === 'tag' && node.content) {
+        posthtmlRetext(node.content)
+      }
+
+      // process content for any text node
+      if (node.type === 'text' && !/^\n\s*$/.test(node)) {
+        if (node.content.match(/[^\s]/)) {
+          contentNodes.push(node)
+          tasks.push(retext.process(node.content))
+        }
+      }
+    })
+
+    // resolve all the promises, set to contents
+    return W.map(tasks, (content, i) => {
+      contentNodes[i].content = content.toString()
+    }).then(() => tree)
+  }
+}

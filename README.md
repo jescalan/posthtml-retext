@@ -1,24 +1,21 @@
-# PostHTML-Retext
-[![npm version](https://badge.fury.io/js/posthtml-retext.svg)](http://badge.fury.io/js/posthtml-retext)
+# PostHTML Retext
+[![npm](https://badge.fury.io/js/posthtml-retext.svg)](http://badge.fury.io/js/posthtml-retext)
 
-[PostHTML](http://github.com/posthtml/posthtml) plugin wrapper over [Retext](https://github.com/wooorm/retext) extensible system for analysing and manipulating natural language
+[PostHTML](http://github.com/posthtml/posthtml) plugin wrapper over [Retext](https://github.com/wooorm/retext) extensible system for analyzing and manipulating natural language
 
 ## Usage
 
 ```js
-var fs = require('fs'),
-    posthtml = require('posthtml'),
-    html = fs.readFileSync('path/to/file.html');
+const fs = require('fs')
+const posthtml = require('posthtml')
+const retext = require('posthtml-retext')
+const emoji = require('retext-emoji')
+const smartypants = require('retext-smartypants')
 
-posthtml()
-    .use(require('posthtml-retext')([
-        [require('retext-emoji'), { convert: 'encode' }], // Array if plugin has options
-        require('retext-smartypants')
-    ]))
-    .process(html)
-    .then(function(result) {
-        fs.writeFileSync('path/to/file.html');
-    })
+posthtml({
+  plugins: retext([[emoji, { convert: 'encode' }], smartpants])
+}).process(fs.readFileSync('path/to/file.html', 'utf8'))
+  .then((result) => { fs.writeFileSync('path/to/file.html', 'utf8') })
 ```
 
 #### Input html
